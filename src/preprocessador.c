@@ -4,22 +4,21 @@
 #include <ctype.h>
 #include "preprocessador.h"
 
-// Estrutura para armazenar as diretivas EQU
+// armazenar as diretivas EQU
 typedef struct {
     char nome[50];
     char valor[20];
 } Equ;
 
-// Variáveis globais restritas a este arquivo
+// Variáveis globais 
 static Equ tabela_equ[100];
 static int qtd_equ = 0;
 
-// Função auxiliar para remover espaços ao redor das vírgulas (exigência do COPY)
+// remover espaço do lado das vírgulas(COPY)
 void formatar_virgulas(char *linha) {
     char temp[256];
     int j = 0;
     for (int i = 0; linha[i] != '\0'; i++) {
-        // Pula espaço se estiver imediatamente antes ou depois de uma vírgula
         if (linha[i] == ' ' && i > 0 && linha[i-1] == ',') continue;
         if (linha[i] == ' ' && linha[i+1] == ',') continue;
         temp[j++] = linha[i];
@@ -28,14 +27,13 @@ void formatar_virgulas(char *linha) {
     strcpy(linha, temp);
 }
 
-// Função auxiliar para buscar valor de um rótulo no EQU
 const char* buscar_equ(const char *nome) {
     for (int i = 0; i < qtd_equ; i++) {
         if (strcmp(tabela_equ[i].nome, nome) == 0) {
             return tabela_equ[i].valor;
         }
     }
-    return NULL; // Retorna NULL se não achar
+    return NULL; // 
 }
 
 int pre_processar(const char *nome_arquivo_entrada) {
@@ -44,8 +42,6 @@ int pre_processar(const char *nome_arquivo_entrada) {
         printf("Erro: Nao foi possivel abrir o arquivo %s\n", nome_arquivo_entrada);
         return 0;
     }
-
-    // Geração do nome do arquivo de saída (.pre) [cite: 15]
     char nome_arquivo_saida[256];
     strcpy(nome_arquivo_saida, nome_arquivo_entrada);
     char *extensao = strrchr(nome_arquivo_saida, '.');
@@ -55,28 +51,28 @@ int pre_processar(const char *nome_arquivo_entrada) {
         strcat(nome_arquivo_saida, ".pre");
     }
 
-    // Buffers para reorganizar as seções [cite: 23]
+    // reserva espaço para ordenar as seções
     char secao_text[10000] = "";
     char secao_data[10000] = "";
-    int na_secao_text = 1; // Flag padrão (1 = TEXT, 0 = DATA)
+    int na_secao_text = 1; // 1 = TEXT, 0 = DATA
 
     char linha[256];
     int pular_proxima_linha = 0;
     char rotulo_pendente[100] = "";
 
     while (fgets(linha, sizeof(linha), arquivo_asm) != NULL) {
-        // 1. Remover comentários (tudo após ';') [cite: 30, 31]
+        // Remover comentários 
         char *comentario = strchr(linha, ';');
         if (comentario != NULL) {
             *comentario = '\0';
         }
 
-        // 2. Converter para maiúsculas (Case Insensitive) [cite: 25]
+        // Case Insensitive
         for (int i = 0; linha[i] != '\0'; i++) {
             linha[i] = toupper(linha[i]);
         }
 
-        // 3. Tokenização da linha para remover espaços/tabs extras [cite: 28]
+        // separa linha em tokens
         char tokens[10][50];
         int num_tokens = 0;
         char *token = strtok(linha, " \t\r\n");
@@ -87,20 +83,19 @@ int pre_processar(const char *nome_arquivo_entrada) {
             token = strtok(NULL, " \t\r\n");
         }
 
-        if (num_tokens == 0) continue; // Linha vazia, ignora
+        if (num_tokens == 0) continue; 
 
-        // Verifica flag do IF [cite: 31]
+        // IF
         if (pular_proxima_linha) {
             pular_proxima_linha = 0;
             continue; 
         }
 
-        // 4. Tratamento de Diretivas de Pré-processamento (EQU e IF)
-        // Cenário EQU: ROTULO: EQU VALOR
+        // EQU e IF
+        // EQU: ROTULO: EQU VALOR
         if (num_tokens >= 3 && strcmp(tokens[1], "EQU") == 0) {
             char nome_rotulo[50];
             strcpy(nome_rotulo, tokens[0]);
-            // Remove o ':' do final do nome do rótulo para salvar na tabela
             if (nome_rotulo[strlen(nome_rotulo) - 1] == ':') {
                 nome_rotulo[strlen(nome_rotulo) - 1] = '\0';
             }
@@ -110,10 +105,9 @@ int pre_processar(const char *nome_arquivo_entrada) {
             continue; // EQU não vai para o arquivo .pre
         }
 
-        // Cenário IF: IF VALOR_OU_ROTULO
+        // IF: IF VALOR_OU_ROTULO
         if (num_tokens == 2 && strcmp(tokens[0], "IF") == 0) {
             const char *valor_if = buscar_equ(tokens[1]);
-            // Se o valor não existir no EQU, assumimos o próprio token (pode ser "1" ou "0" direto)
             if (valor_if == NULL) valor_if = tokens[1]; 
             
             if (strcmp(valor_if, "1") != 0 && strcmp(valor_if, "0X01") != 0) {
@@ -122,34 +116,32 @@ int pre_processar(const char *nome_arquivo_entrada) {
             continue; // IF não vai para o arquivo .pre
         }
 
-        // 5. Identificação das Seções
+        // Seções data/text
         if (num_tokens >= 2 && strcmp(tokens[0], "SECTION") == 0) {
             if (strcmp(tokens[1], "TEXT") == 0) {
                 na_secao_text = 1;
             } else if (strcmp(tokens[1], "DATA") == 0) {
                 na_secao_text = 0;
             }
-            continue; // Não vamos salvar as linhas "SECTION", vamos recriá-las na escrita
-        }
-
-        // 6. Tratamento de Rótulos Sozinhos na Linha [cite: 29]
-        if (num_tokens == 1 && tokens[0][strlen(tokens[0]) - 1] == ':') {
-            strcpy(rotulo_pendente, tokens[0]);
-            strcat(rotulo_pendente, " "); // Adiciona um espaço para concatenar com a próxima instrução
             continue; 
         }
 
-        // 7. Montagem da Linha Limpa
+        // rotulos sozinhos na msm linha
+        if (num_tokens == 1 && tokens[0][strlen(tokens[0]) - 1] == ':') {
+            strcpy(rotulo_pendente, tokens[0]);
+            strcat(rotulo_pendente, " "); 
+            continue; 
+        }
+
         char linha_limpa[256] = "";
         
-        // Se tinha um rótulo na linha anterior, coloca ele na frente
+        // prioridade de rotulo
         if (strlen(rotulo_pendente) > 0) {
             strcpy(linha_limpa, rotulo_pendente);
-            rotulo_pendente[0] = '\0'; // Limpa a pendência
+            rotulo_pendente[0] = '\0'; 
         }
 
         for (int i = 0; i < num_tokens; i++) {
-            // Substituição de EQU no código (exceto se for definição de rótulo terminada em ':')
             if (tokens[i][strlen(tokens[i]) - 1] != ':') {
                 const char *valor_equ = buscar_equ(tokens[i]);
                 if (valor_equ != NULL) {
@@ -164,11 +156,10 @@ int pre_processar(const char *nome_arquivo_entrada) {
             if (i < num_tokens - 1) strcat(linha_limpa, " ");
         }
 
-        // Aplica a regra de juntar argumentos com vírgula (ex: COPY A,B) [cite: 20, 27]
+        // argumentos com vírgula COPY A,B
         formatar_virgulas(linha_limpa);
-        strcat(linha_limpa, "\n"); // Adiciona quebra de linha no final
+        strcat(linha_limpa, "\n"); 
 
-        // 8. Separação de TEXT e DATA
         if (na_secao_text) {
             strcat(secao_text, linha_limpa);
         } else {
@@ -178,20 +169,20 @@ int pre_processar(const char *nome_arquivo_entrada) {
 
     fclose(arquivo_asm);
 
-    // 9. Escrita no arquivo .pre garantindo DATA por último 
+    // DATA por último 
     FILE *arquivo_pre = fopen(nome_arquivo_saida, "w");
     if (!arquivo_pre) {
         printf("Erro: Nao foi possivel criar o arquivo %s\n", nome_arquivo_saida);
         return 0;
     }
 
-    // Escreve a seção TEXT
+    // seção TEXT
     if (strlen(secao_text) > 0) {
         fprintf(arquivo_pre, "SECTION TEXT\n");
         fprintf(arquivo_pre, "%s", secao_text);
     }
 
-    // Escreve a seção DATA
+    // seção DATA
     if (strlen(secao_data) > 0) {
         fprintf(arquivo_pre, "SECTION DATA\n");
         fprintf(arquivo_pre, "%s", secao_data);

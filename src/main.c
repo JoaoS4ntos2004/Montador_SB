@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "preprocessador.h"
+#include "assembler.h"
+#include "simulador.h"
 
 int main(int argc, char *argv[]) {
-    // Verifica se o usuário passou o arquivo
     if (argc != 2) {
         printf("Uso correto: ./montador <arquivo>\n");
         return 1;
@@ -11,7 +12,6 @@ int main(int argc, char *argv[]) {
 
     char *nome_arquivo = argv[1];
     
-    // Pega a extensão do arquivo para saber em qual modo rodar
     char *extensao = strrchr(nome_arquivo, '.');
 
     if (extensao == NULL) {
@@ -19,18 +19,19 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Modo 1: Pré-processador (.asm -> .pre)
+    // Pré-processador .asm -> .pre
     if (strcmp(extensao, ".asm") == 0) {
         printf("Iniciando pre-processamento...\n");
         pre_processar(nome_arquivo);
     } 
-    // Futuro Modo 2: Montador (.pre -> .obj e .pen)
+    // Montador .pre -> .obj e .pen
     else if (strcmp(extensao, ".pre") == 0) {
-        printf("Modo montador ainda nao implementado!\n");
+        printf("Iniciando montagem...\n");
+        montar(nome_arquivo);
     } 
-    // Futuro Modo 3: Simulador (.obj -> execucao)
+    // Simulador .obj -> execucao
     else if (strcmp(extensao, ".obj") == 0) {
-        printf("Modo simulador ainda nao implementado!\n");
+        simular(nome_arquivo);
     } 
     else {
         printf("Erro: Extensao %s nao reconhecida.\n", extensao);
