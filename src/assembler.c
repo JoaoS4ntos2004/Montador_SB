@@ -46,7 +46,7 @@ void resolver_pendencias(int cabeca_lista, int endereco_real) {
         int proximo = memoria_obj[atual]; 
         memoria_obj[atual] = endereco_real; 
         atual = proximo; 
-}
+    }
 }
 
 
@@ -81,7 +81,7 @@ int montar(const char *nome_arquivo_entrada) {
             int idx_simbolo = buscar_simbolo(nome_rotulo);
 
             if (idx_simbolo == -1) {
-                // Rótulo novo-->DEFINIDO na tabela                     
+                // Rótulo novo-->DEFINIDO na tabela                      
                 strcpy(tabela_simbolos[qtd_simbolos].nome, nome_rotulo);
                 tabela_simbolos[qtd_simbolos].endereco = PC;
                 tabela_simbolos[qtd_simbolos].definido = 1;
@@ -106,22 +106,31 @@ int montar(const char *nome_arquivo_entrada) {
             memoria_obj[PC]= opcode;
             memoria_pen[PC] = opcode;
             int tamanho = buscar_tamanho(tokens[indice_atual]);
-            int endereco_instrucao = PC;
             PC++;
 
             // tratamento de Operandos 
             for (int i = 1; i < tamanho; i++) {
+                if (indice_atual + i >= num_tokens) break;
+                
                 char *operando = tokens[indice_atual + i];
-                int idx_op = buscar_simbolo(operando);
+                
+                char op_limpo[50];
+                int k = 0;
+                for(int j = 0; operando[j] != '\0'; j++) {
+                    if(operando[j] != ',') op_limpo[k++] = operando[j];
+                }
+                op_limpo[k] = '\0';
+
+                int idx_op = buscar_simbolo(op_limpo);
 
                 if (idx_op == -1) {
                     // cria pendência p/ opp desconecido
-                    strcpy(tabela_simbolos[qtd_simbolos].nome, operando);
+                    strcpy(tabela_simbolos[qtd_simbolos].nome, op_limpo);
                     tabela_simbolos[qtd_simbolos].endereco = -1; 
                     tabela_simbolos[qtd_simbolos].definido = 0;
                     
-                    memoria_obj[PC] = tabela_simbolos[qtd_simbolos].endereco;
-                    memoria_pen[PC] = tabela_simbolos[qtd_simbolos].endereco;
+                    memoria_obj[PC] = -1;
+                    memoria_pen[PC] = -1;
                     
                     tabela_simbolos[qtd_simbolos].endereco = PC; 
                     qtd_simbolos++;
@@ -161,7 +170,6 @@ int montar(const char *nome_arquivo_entrada) {
         }
     }
 
-    // ... (final do loop while)
     fclose(arquivo_pre);
 
     // GERAÇÃO DOS ARQUIVOS DE SAÍDA .obj E .pen
@@ -169,17 +177,20 @@ int montar(const char *nome_arquivo_entrada) {
     strcpy(nome_obj, nome_arquivo_entrada);
     strcpy(nome_pen, nome_arquivo_entrada);
     
-    // Troca a extensão .pre por .obj e .pen [cite: 34]
-    strcpy(strrchr(nome_obj, '.'), ".obj");
-    strcpy(strrchr(nome_pen, '.'), ".pen");
+    // Troca a extensão .pre por .obj e .pen
+    char *p_ext = strrchr(nome_obj, '.');
+    if (p_ext) strcpy(p_ext, ".obj");
+    
+    p_ext = strrchr(nome_pen, '.');
+    if (p_ext) strcpy(p_ext, ".pen");
 
     FILE *arquivo_obj = fopen(nome_obj, "w");
     FILE *arquivo_pen = fopen(nome_pen, "w");
 
-    // Grava os códigos separados por espaço em uma única linha [cite: 35]
+    // Grava os códigos separados por espaço em uma única linha
     for (int i = 0; i < PC; i++) {
-        fprintf(arquivo_obj, "%d ", memoria_obj[i]);
-        fprintf(arquivo_pen, "%d ", memoria_pen[i]); // O .pen guarda as pendências não resolvidas [cite: 36]
+        fprintf(arquivo_obj, "%d%c", memoria_obj[i], (i == PC - 1) ? '\0' : ' ');
+        fprintf(arquivo_pen, "%d%c", memoria_pen[i], (i == PC - 1) ? '\0' : ' '); 
     }
 
     fclose(arquivo_obj);

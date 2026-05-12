@@ -17,8 +17,10 @@ int simular(const char *nome_arquivo_entrada) {
 
     // lendo .obj e colocando na memória
     while (fscanf(arquivo_obj, "%d", &valor) == 1) {
-        memoria[tamanho_memoria] = valor;
-        tamanho_memoria++;
+        if (tamanho_memoria < 1000) {
+            memoria[tamanho_memoria] = valor;
+            tamanho_memoria++;
+        }
     }
     fclose(arquivo_obj);
 
@@ -67,7 +69,12 @@ int simular(const char *nome_arquivo_entrada) {
                 else PC += 2;
                 break;
             case 9: // COPY 
-                memoria[memoria[PC + 2]] = memoria[memoria[PC + 1]];
+                // op2 <- op1
+                // memoria[PC+1] - OP1
+                // memoria[PC+2] - OP2
+                int endereco_destino = memoria[PC + 1];
+                int endereco_origem = memoria[PC + 2];
+                memoria[endereco_destino] = memoria[endereco_origem];
                 PC += 3;
                 break;
             case 10: // LOAD
