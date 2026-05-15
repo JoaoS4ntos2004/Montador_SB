@@ -33,13 +33,15 @@ O programa detecta o modo pela extensão do arquivo:
 OBS: Adicione o arquivo que quiser traduzir na pasta `tests/`, e troque o termo "arquivo" nos comandos 
 acima pelo nome do arquivo que você adicionou na pasta. Já existem teste padrões na pasta feitos para testar o montador, são eles:
 
-teste1_soma:                INPUT, LOAD, ADD, STORE, OUTPUT — fluxo básico completo
-teste2_copy:                COPY e CONST decimal — o bug que você corrigiu
-teste3_equ_if:              EQU e IF — muda o FLAG de 1 para 0 e confere se a linha some
-teste4_laco:                MPZ, JMP, SUB — laço com desvio condicional
-teste5_data_primeiro:       DATA declarada antes de TEXT — reordenação no pré-processador
-teste6_const_hexa:          CONST com 0x1E e valor negativo -5
-teste7_rotulo_enter:        Rótulo sozinho na linha seguido de quebra de linha
+| Teste | O que verifica |
+|-------|----------------|
+| `teste1_soma` | INPUT, LOAD, ADD, STORE, OUTPUT — fluxo básico completo |
+| `teste2_copy` | COPY e CONST decimal — o bug que você corrigiu |
+| `teste3_equ_if` | EQU e IF — muda o FLAG de 1 para 0 e confere se a linha some |
+| `teste4_laco` | JMPZ, JMP, SUB — laço com desvio condicional |
+| `teste5_data_primeiro` | DATA declarada antes de TEXT — reordenação no pré-processador |
+| `teste6_const_hexa` | CONST com `0x1E` e valor negativo `-5` |
+| `teste7_rotulo_enter` | Rótulo sozinho na linha seguido de quebra de linha |
 
 ## Limpar
 
