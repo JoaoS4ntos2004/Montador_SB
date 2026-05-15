@@ -1,13 +1,18 @@
+; Teste 1: soma dois numeros e imprime o resultado
+; Entrada: dois numeros inteiros
+; Saida esperada: a soma dos dois
+ 
 SECTION TEXT
-INPUT N1
-INPUT N2
-LOAD N1
-ADD N2
-STORE RESULTADO
-OUTPUT RESULTADO
-STOP
-
+    INPUT A
+    INPUT B
+    LOAD A
+    ADD B
+    STORE RES
+    OUTPUT RES
+    STOP
+ 
 SECTION DATA
-N1: SPACE
-N2: SPACE
-RESULTADO: SPACE
+A:      SPACE
+B:      SPACE
+RES:    SPACE
+ 

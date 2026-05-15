@@ -1,94 +1,56 @@
-# Montador — Software Básico
-Implementação de um montador, ligador e simulador para o assembly hipotético apresentado na disciplina de Software Básico.
+# Montador — Software Básico (UnB)
 
-### Nome: João Pedro Fernandes Santos
+**Aluno:** João Pedro Fernandes Santos - 222025342
+**SO:** Linux (Ubuntu 22.04)  
+**Compilador:** GCC
 
-### Sistema operacional: Linux (Ubuntu 22.04)
+Montador, simulador e ligador do assembly inventado da disciplina Software Básico.
 
-### Compilador: GCC
+---
 
-## Visão geral
-O montador processa arquivos em três estágios independentes, acionados pela extensão do arquivo de entrada:
+## Compilar
 
-Entrada	Saída	O que faz
-.asm	.pre	Pré-processamento
-.pre	.obj + .pen	Montagem
-.obj	(stdout)	Simulação
-
-## Como compilar
-Na raiz do projeto, execute:
-
-```
-make clean 
+```bash
+make clean
 make
 ```
 
-O executável gerado se chama montador.
+## Rodar
 
-## Fluxo de execução
-### 1. Pré-processamento — .asm → .pre
-Resolve diretivas EQU e IF, remove comentários, normaliza maiúsculas/minúsculas e reordena as seções (TEXT sempre antes de DATA).
+O programa detecta o modo pela extensão do arquivo:
 
-```
-./montador tests/nome_do_arquivo.asm
-```
+```bash
+# 1. Pré-processar: resolve EQU/IF, remove comentários, reordena seções(DATA/TEXT)
+./montador arquivo.asm
 
-### 2. Montagem — .pre → .obj e .pen
-Gera o código de máquina ( .obj) e o arquivo de passagem única com pendências não resolvidas ( .pen).
+# 2. Montar: gera código de máquina
+./montador arquivo.pre
 
-```
-./montador tests/nome_do_arquivo.pre
+# 3. Simular: executa o .obj 
+./montador arquivo.obj
 ```
 
-### 3. Simulação — .obj → execução
-Carrega o código na memória e executa as instruções. Saídas do comando OUTPUT são impressas no terminal; entradas do comando INPUT são lidas do teclado.
+OBS: Adicione o arquivo que quiser traduzir na pasta `tests/`, e troque o termo "arquivo" nos comandos 
+acima pelo nome do arquivo que você adicionou na pasta. Já existem teste padrões na pasta feitos para testar o montador, são eles:
 
-```
-./montador tests/nome_do_arquivo.obj
-```
+teste1_soma:                INPUT, LOAD, ADD, STORE, OUTPUT — fluxo básico completo
+teste2_copy:                COPY e CONST decimal — o bug que você corrigiu
+teste3_equ_if:              EQU e IF — muda o FLAG de 1 para 0 e confere se a linha some
+teste4_laco:                MPZ, JMP, SUB — laço com desvio condicional
+teste5_data_primeiro:       DATA declarada antes de TEXT — reordenação no pré-processador
+teste6_const_hexa:          CONST com 0x1E e valor negativo -5
+teste7_rotulo_enter:        Rótulo sozinho na linha seguido de quebra de linha
 
-## Limpeza
-Remove o executável e todos os arquivos temporários gerados durante os testes:
+## Limpar
 
-```
+```bash
 make clean
 ```
 
-## Instruções suportadas
-Mnemônico	Operandos	Código	Tamanho	Descrição
-ADD	1	1	2	ACC ← ACC + MEM[OP]
-SUB	1	2	2	ACC ← ACC - MEM[OP]
-MULT	1	3	2	ACC ← ACC * MEM[OP]
-DIV	1	4	2	ACC ← ACC / MEM[OP]
-JMP	1	5	2	PC ← OP
-JMPN	1	6	2	Se ACC < 0, PC ← OP
-JMPP	1	7	2	Se ACC > 0, PC ← OP
-JMPZ	1	8	2	Se ACC == 0, PC ← OP
-COPY	2	9	3	MEM[OP1] ← MEM[OP2]
-LOAD	1	10	2	ACC ← MEM[OP]
-STORE	1	11	2	MEM[OP] ← ACC
-INPUT	1	12	2	MEM[OP] ← STDIN
-OUTPUT	1	13	2	STDOUT ← MEM[OP]
-STOP	0	14	1	Encerra a execução
+---
 
-## Diretivas suportadas
-SECTION TEXT/DATA: Marca início de seção.
+## Estrutura
 
-SPACE [n]: Reserva 1 ou n posições de memória (inicializadas com 0).
-
-CONST valor: Reserva memória com constante (decimal, negativo ou hex 0x).
-
-EQU: Cria sinônimo textual para um símbolo (processado no pré).
-
-IF: Inclui a próxima linha somente se o operando for 1 (processado no pré).
-
-BEGIN / END: Marcam início e fim de módulo.
-
-EXTERN: Indica rótulo definido em módulo externo.
-
-PUBLIC: Indica rótulo público para outros módulos.
-
-## Estrutura do projeto
 ```
 montador/
 ├── src/
@@ -101,3 +63,34 @@ montador/
 ├── Makefile
 └── README.md
 ```
+
+## Instruções
+
+| Mnemônico | Código | Tamanho | Operação |
+|-----------|--------|---------|----------|
+| ADD | 1 | 2 | ACC ← ACC + MEM[OP] |
+| SUB | 2 | 2 | ACC ← ACC - MEM[OP] |
+| MULT | 3 | 2 | ACC ← ACC * MEM[OP] |
+| DIV | 4 | 2 | ACC ← ACC / MEM[OP] |
+| JMP | 5 | 2 | PC ← OP |
+| JMPN | 6 | 2 | se ACC < 0: PC ← OP |
+| JMPP | 7 | 2 | se ACC > 0: PC ← OP |
+| JMPZ | 8 | 2 | se ACC = 0: PC ← OP |
+| COPY | 9 | 3 | MEM[OP1] ← MEM[OP2] |
+| LOAD | 10 | 2 | ACC ← MEM[OP] |
+| STORE | 11 | 2 | MEM[OP] ← ACC |
+| INPUT | 12 | 2 | MEM[OP] ← STDIN |
+| OUTPUT | 13 | 2 | STDOUT ← MEM[OP] |
+| STOP | 14 | 1 | encerra execução |
+
+## Diretivas
+
+| Diretiva | Descrição |
+|----------|-----------|
+| SECTION TEXT/DATA | marca início/retomada de seção |
+| SPACE [n] | reserva n posições (padrão 1), inicializadas com 0 |
+| CONST val | reserva posição com constante (decimal, negativo ou 0x hex) |
+| EQU | alias textual, processado no pré |
+| IF | inclui próxima linha só se operando = 1, processado no pré |
+| BEGIN / END | início e fim de módulo |
+| EXTERN / PUBLIC | rótulos externos e públicos |
